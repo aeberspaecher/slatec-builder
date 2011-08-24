@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+"""Script to install libslatec.
+"""
+
+import os
+import sys
+import tempfile
+import shutil
+from optparse import OptionParser
+
+progUsage = "usage: %prog -p installation path"
+fFlags = "-O2 -march=native -fPIC -shared -m64" # Fortran flasgs for 64-bit machines
+
+parser = OptionParser(usage=progUsage)
+
+parser.add_option("-p", "--path", action="store", type="string",
+                  dest="installPath", help="Path to install libslatec to.")
+
+(options, args) = parser.parse_args()
+
+if(not options.installPath):
+    parser.error("You need to specifiy an installation path!\n"\
+                 +"Type ./install --help for more information.")
+    sys.exit(1)
+
+if(not os.path.isdir(options.installPath)):
+    parser.error("'%s' is not a path!"%options.installPath)
+
+# create build directory
+buildPath = tempfile.mkdtemp()
+
+# copy slatec.f90 and the splitter to temp path:
+shutil.copy("slatec.f90", buildPath)
+shutil.copy("f90split.f90", buildPath)
+
+# building f90split:
+os.system("gfortran %s/f90split.f90 -o %s/f90split"%(buildPath, buildPath))
+
+print(buildPath)
