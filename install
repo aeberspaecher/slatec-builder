@@ -3,6 +3,8 @@
 """Script to install libslatec.
 """
 
+# TODO: do the compilation with Python instead with a Bash script
+
 import os
 import sys
 import tempfile
@@ -27,7 +29,7 @@ URLdependencies = ["http://people.sc.fsu.edu/~jburkardt/f_src/slatec/slatec.f90"
 compileScript = """
 for file in *.f90
 do
-    echo "Compiling $file" 
+    echo "Compiling $file"
     gfortran %s -c $file
 done
 """%fFlags
@@ -48,12 +50,21 @@ if(not options.installPath):
 
 if(not os.path.isdir(options.installPath)):
     parser.error("'%s' is not a path!"%options.installPath)
+if(not os.access(options.installPath, os.W_OK)):
+    parser.error("Path '%s' cannot be written to!"%options.installPath)
+for fileN in ["libslatec.so.1.0.1", "libslatec.so.1", "libslatec.so"]:
+    if(os.path.exists(options.installPath+"/"+fileN)):
+        print("File '%s' already exists in %s! Delete it first."%(fileN, options.installPath))
+        sys.exit(1)
 
 # check dependencies, if missing: try to download them:
 for i in range(len(dependencies)):
     if(not os.path.isfile(dependencies[i])):
         print("File %s is missing. Trying to download it."%dependencies[i])
-        os.system("wget %s"%URLdependencies[i])
+        retVal = os.system("wget %s"%URLdependencies[i])
+        if(retVal != 0):
+            print("Could not download '%s'!"%URLdependencies[i])
+            sys.exit(1)
 
 # create build directory
 buildPath = tempfile.mkdtemp()
@@ -64,7 +75,6 @@ for f in files1:
     shutil.copy(f, buildPath)
 
 # building f90split:
-
 os.system("gfortran %s/f90split.f90 -o %s/f90split"%(buildPath, buildPath))
 print("Building the tools.")
 # split slatec.f90:
@@ -104,4 +114,4 @@ print("Cleaning up.")
 # erase temporary build dir:
 os.system("rm -rf %s"%buildPath)
 
-print("\nDone.")
+print("\nDone.\nYou maybe want to run `ldconfig'.")
