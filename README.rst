@@ -64,10 +64,11 @@ How it works
 The script ``install`` downloads the dependencies if necessary, and then
 copies all files needed to a temporary directory. There, slatec.f90 will be
 spilt into many f90 files, each containing one single function. Then, files
-that would compile into object files with unresolvable dependencies (missing
-user supplied functions) will be removed. All files will be compiled and
-finally linked together. The shared object is then installed to the path
-specified by the user.
+that would compile into object files with unresolvable dependencies (due to
+missing user supplied functions) will be removed. All files will be compiled
+and finally linked together. The shared object is then installed to the path
+specified by the user. In case the installation path has a sub-directory
+``pkg-config``, additional ``pkg-config`` data will be installed.
 
 To run the script, type
 
@@ -83,3 +84,35 @@ The ``install`` scripts assumes you use a ``gfortran`` version that supports
 different compiler can be chosen. Also, the compilation of the individual
 routines which is so far done by a ``bash`` script can be changed to some
 other shell script.
+
+Please note that unlike as in ``configure`` scripts, the installation path
+is the path you want to shared object to be located in, not the directory
+below. For example, installing a library after
+
+::
+
+  ./configure --prefix=/home/user/local
+
+would install to ``/home/user/local/lib``. For this script, you need to
+specify the ``lib``-dir directly::
+
+  ./install -p /home/user/local/lib
+
+If a ``pkgconfig`` subdirectory is present, a ``.pc`` file will be installed
+into this directory. Then, you can get the library's directory by
+
+::
+
+  pkg-config --libs slatec
+
+(assuming your ``pkg-config`` can see the ``pkgconfig`` directory in the
+installation path - if not, you may want to set the environment variable
+``$PKG_CONFIG_PATH``.
+
+You may then use lines such as
+
+::
+
+  gfortran `pkg-config --libs slatec` -lslatec obj1.o obj2.o -o prog
+
+in your ``Makefile``.
