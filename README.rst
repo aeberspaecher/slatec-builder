@@ -116,3 +116,8 @@ You may then use lines such as
   gfortran `pkg-config --libs slatec` -lslatec obj1.o obj2.o -o prog
 
 in your ``Makefile``.
+
+Furthermore, note that slatec contains routines that can also be found in
+Lapack. If you need those in your program, you'll probably want to use
+system Lapack instead of Slatec, take care that ``-lslatec`` appears left of
+``-llapack`` in the linking command.
